@@ -3,7 +3,7 @@
   MISSION BIKE EXCHANGE
   Oregon Portland Mission — card-based bike marketplace for missionaries
 
-  VERSION: 1.0
+  VERSION: 1.2
   LAST UPDATED: 2026-06-20
 
   DESCRIPTION:
@@ -12,16 +12,25 @@
   helmet/lock availability, and phone number before posting it live to
   the board. Buyers browse posted bikes and tap to call/text the seller.
   Sellers can mark a listing sold or delete it using the same edit code.
+  Buyers can click a bike's photo in the detail view to see it enlarged.
 
   BACKEND: Google Sheets via Apps Script web app (see AppsScript-Code.gs,
-  also v1.0). Reads happen over GET; saves with a photo go over POST,
+  v1.2 or later). Reads happen over GET; saves with a photo go over POST,
   since base64 photo data is too large to fit in a URL's query string.
 
-  RELEASE NOTES (v1.0):
-  First fully working release — draft/edit-code/post flow, photo upload
-  to Drive, search and type filters, mark as sold, delete listing, and
-  live phone number formatting. Built and debugged through several
-  iterations before landing here; future changes will be tracked below.
+  RELEASE NOTES:
+  - 1.2 (2026-06-20): Reworded the "Have an edit code?" button and its
+    modal heading to "Enter Bike Code to Edit", to make clear this is for
+    sellers managing their own listing, not a general lookup for buyers.
+  - 1.1 (2026-06-20): Added a full-size photo lightbox — clicking a bike's
+    photo in the detail view opens it enlarged over a dark backdrop, closes
+    via the X button, clicking the backdrop, or Escape, and returns to the
+    detail view underneath (not the board). Fixed a CSS specificity bug
+    where the lightbox would stay visually hidden but still block clicks
+    underneath it.
+  - 1.0 (2026-06-20): First fully working release — draft/edit-code/post
+    flow, photo upload to Drive, search and type filters, mark as sold,
+    delete listing, and live phone number formatting.
 
   SETUP: see the "Setup notes" details block near the bottom of this file,
   and APPS_SCRIPT_URL / DEMO_MODE in the script tag below.
@@ -430,6 +439,56 @@
     overflow:hidden;
   }
   .detail-photo img{width:100%;height:100%;object-fit:cover;}
+  .detail-photo.clickable{cursor:zoom-in; position:relative;}
+  .detail-photo.clickable:hover img{filter:brightness(0.92);}
+  .detail-photo.clickable::after{
+    content:'⤢ Tap to enlarge';
+    position:absolute;
+    bottom:8px; right:8px;
+    background:rgba(43,43,40,0.72);
+    color:#fff;
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.03em;
+    padding:4px 9px;
+    border-radius:12px;
+    pointer-events:none;
+  }
+
+  .lightbox-veil{
+    position:fixed;
+    inset:0;
+    background:rgba(20,19,17,0.92);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:32px;
+    z-index:100;
+    cursor:zoom-out;
+  }
+  .lightbox-img{
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+    border-radius:4px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.5);
+  }
+  .lightbox-veil.hidden{display:none;}
+  .lightbox-close{
+    position:absolute;
+    top:20px; right:24px;
+    background:rgba(255,255,255,0.12);
+    border:1.5px solid rgba(255,255,255,0.4);
+    color:#fff;
+    width:40px; height:40px;
+    border-radius:50%;
+    font-size:20px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .lightbox-close:hover{background:rgba(255,255,255,0.22);}
   .detail-price{
     font-family:'Space Mono', monospace;
     font-weight:700;
@@ -567,7 +626,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
     <div class="header-actions">
       <button class="secondary-btn" id="findCardBtn">
         <i class="ti ti-key" aria-hidden="true"></i>
-        <span class="label">Have an edit code?</span>
+        <span class="label">Enter Bike Code to Edit</span>
       </button>
       <button class="post-btn" id="sellBikeBtn">
         <i class="ti ti-plus" aria-hidden="true"></i>
@@ -632,7 +691,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 <div class="modal-veil hidden" id="findVeil">
   <div class="modal">
     <div class="modal-head">
-      <h2>Find your card</h2>
+      <h2>Enter Bike Code to Edit</h2>
       <button class="x-btn" id="closeFindBtn" aria-label="Close"><i class="ti ti-x"></i></button>
     </div>
     <div class="field">
@@ -744,11 +803,17 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
   <div class="modal" id="detailModalInner"></div>
 </div>
 
+<!-- PHOTO LIGHTBOX (full-size enlarged photo) -->
+<div class="lightbox-veil hidden" id="lightboxVeil">
+  <button class="lightbox-close" id="lightboxCloseBtn" aria-label="Close enlarged photo"><i class="ti ti-x"></i></button>
+  <img class="lightbox-img" id="lightboxImg" alt="">
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="wrap" style="padding-top:8px;">
   <p style="font-family:'Space Mono', monospace; font-size:11px; color:var(--ink-soft); margin:0 0 6px;">
-    Mission Bike Exchange — v1.0 (2026-06-20)
+    Mission Bike Exchange — v1.2 (2026-06-20)
   </p>
   <details style="font-family:'Space Mono', monospace; font-size:11.5px; color:var(--ink-soft);">
     <summary style="cursor:pointer;">Setup notes (for whoever maintains this site)</summary>
@@ -1457,7 +1522,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
         '<h2>' + escapeHtml(b.title) + '</h2>' +
         '<button class="x-btn" id="closeDetailBtn" aria-label="Close"><i class="ti ti-x"></i></button>' +
       '</div>' +
-      '<div class="detail-photo">' + photoBlock(b) + '</div>' +
+      '<div class="detail-photo' + (b.photo ? ' clickable' : '') + '" id="detailPhotoEl">' + photoBlock(b) + '</div>' +
       '<div class="detail-price">$' + Number(b.price).toLocaleString() + '</div>' +
       '<div class="detail-meta-grid">' +
         '<div><span class="k">Type</span><span class="v">' + escapeHtml(b.type) + '</span></div>' +
@@ -1481,7 +1546,31 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
     document.getElementById('closeDetailBtn').addEventListener('click', function(){
       detailVeil.classList.add('hidden');
     });
+
+    if(b.photo){
+      var detailPhotoEl = document.getElementById('detailPhotoEl');
+      detailPhotoEl.addEventListener('click', function(){
+        openLightbox(b.photo, b.title);
+      });
+    }
   }
+
+  /* ---------------- PHOTO LIGHTBOX ---------------- */
+  var lightboxVeil = document.getElementById('lightboxVeil');
+  var lightboxImg = document.getElementById('lightboxImg');
+  var lightboxCloseBtn = document.getElementById('lightboxCloseBtn');
+
+  function openLightbox(src, title){
+    lightboxImg.src = src;
+    lightboxImg.alt = 'Enlarged photo of ' + title;
+    lightboxVeil.classList.remove('hidden');
+  }
+  function closeLightbox(){
+    lightboxVeil.classList.add('hidden');
+    lightboxImg.src = '';
+  }
+  lightboxVeil.addEventListener('click', closeLightbox);
+  lightboxCloseBtn.addEventListener('click', function(e){ e.stopPropagation(); closeLightbox(); });
 
   detailVeil.addEventListener('click', function(e){ if(e.target === detailVeil) detailVeil.classList.add('hidden'); });
 
@@ -1493,6 +1582,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
       editVeil.classList.add('hidden');
       detailVeil.classList.add('hidden');
       deleteConfirmVeil.classList.add('hidden');
+      closeLightbox();
     }
   });
 
