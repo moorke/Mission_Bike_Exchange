@@ -808,13 +808,13 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 
   function apiCall(action, params){
     // Apps Script web apps respond to GET cleanly without CORS preflight,
-    // so all calls (including writes) go through GET with query params.
+    // so lightweight read/write calls go through GET with query params.
     var url = apiUrl(action, params);
-    console.log('[bikeapp] calling:', url);
+    console.log('[bikeapp] calling (GET):', url);
     return fetch(url).then(function(res){
       console.log('[bikeapp] response status:', res.status, 'ok:', res.ok, 'redirected:', res.redirected, 'finalUrl:', res.url);
       return res.text().then(function(text){
-        console.log('[bikeapp] raw response text:', text);
+        console.log('[bikeapp] raw response text:', text.length > 500 ? (text.slice(0,500) + '... (truncated, ' + text.length + ' chars total)') : text);
         try{
           return JSON.parse(text);
         }catch(parseErr){
@@ -824,6 +824,34 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
       });
     }).catch(function(fetchErr){
       console.error('[bikeapp] fetch failed entirely:', fetchErr);
+      throw fetchErr;
+    });
+  }
+
+  function apiCallPost(action, bodyObj){
+    // Used for calls that may carry a large payload (e.g. a photo as base64).
+    // GET requests put data in the URL, which has a hard length limit far
+    // smaller than a typical phone photo — POST sends it in the request
+    // body instead, which has no such limit.
+    var url = apiUrl(action, {});
+    console.log('[bikeapp] calling (POST):', url, '— body size:', JSON.stringify(bodyObj).length, 'chars');
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // avoids CORS preflight on Apps Script
+      body: JSON.stringify(bodyObj)
+    }).then(function(res){
+      console.log('[bikeapp] response status:', res.status, 'ok:', res.ok, 'redirected:', res.redirected, 'finalUrl:', res.url);
+      return res.text().then(function(text){
+        console.log('[bikeapp] raw response text:', text.length > 500 ? (text.slice(0,500) + '... (truncated, ' + text.length + ' chars total)') : text);
+        try{
+          return JSON.parse(text);
+        }catch(parseErr){
+          console.error('[bikeapp] response was not valid JSON:', parseErr);
+          throw new Error('Server did not return valid JSON (got: ' + text.slice(0,200) + ')');
+        }
+      });
+    }).catch(function(fetchErr){
+      console.error('[bikeapp] POST fetch failed entirely:', fetchErr);
       throw fetchErr;
     });
   }
@@ -906,7 +934,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
       payload.fields.photoUrl = fields.photo || '';
     }
 
-    return apiCall('saveFields', { payload: JSON.stringify(payload) }).then(function(res){
+    return apiCallPost('saveFields', { action: 'saveFields', payload: payload }).then(function(res){
       if(res.error) throw new Error(res.error);
       var updated = res.bike;
       updated.photo = updated.photoUrl || null;
