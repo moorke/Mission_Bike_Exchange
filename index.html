@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mission Bike Exchange — Oregon Portland Mission</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Expanded:wght@600;700&family=Archivo:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/3.1.0/iconfont/tabler-icons.min.css">
+<style>
+  :root{
+    --paper:#F6F3EC;
+    --paper-deep:#EEE8D9;
+    --ink:#2B2B28;
+    --ink-soft:#5C5A52;
+    --rust:#C1502E;
+    --rust-dark:#963D22;
+    --sage:#6B7A5E;
+    --sage-dark:#4E5A44;
+    --line:#D8D0BC;
+    --card:#FFFEFB;
+    --tag-string:#B9AE91;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Archivo', sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px 80px;}
+
+  header{
+    border-bottom:2px solid var(--ink);
+    padding:28px 0 18px;
+    margin-bottom:8px;
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:14px;}
+  .brand-mark{
+    width:46px;height:46px;border-radius:50%;
+    border:2.5px solid var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    background:var(--rust);color:var(--paper);
+    flex-shrink:0;
+  }
+  .brand-mark i{font-size:22px;}
+  .brand h1{
+    font-family:'Archivo Expanded', sans-serif;
+    font-weight:700;
+    font-size:27px;
+    letter-spacing:-0.01em;
+    margin:0;
+    line-height:1.15;
+  }
+  .brand .tagline{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-top:4px;
+  }
+  .header-actions{display:flex;gap:10px;}
+  .post-btn{
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    padding:13px 22px;
+    border-radius:3px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .post-btn:hover{background:var(--rust-dark);}
+  .post-btn:active{transform:scale(0.97);}
+  .secondary-btn{
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    letter-spacing:0.04em;
+    text-transform:uppercase;
+    background:var(--card);
+    color:var(--ink);
+    border:1.5px solid var(--ink);
+    padding:11.5px 18px;
+    border-radius:3px;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .secondary-btn:hover{background:var(--paper-deep);}
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin:22px 0 18px;
+    flex-wrap:wrap;
+  }
+  .toolbar input[type=text]{
+    flex:1;
+    min-width:180px;
+    height:42px;
+    border:1.5px solid var(--ink);
+    border-radius:3px;
+    background:var(--card);
+    padding:0 14px;
+    font-family:'Archivo', sans-serif;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .toolbar input[type=text]:focus{outline:2px solid var(--rust);outline-offset:1px;}
+  .chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+  .chip{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+    padding:8px 14px;
+    border:1.5px solid var(--ink);
+    border-radius:20px;
+    background:var(--card);
+    color:var(--ink);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .chip.active{background:var(--ink);color:var(--paper);}
+  .count-line{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:18px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+    gap:22px;
+  }
+  .card{
+    background:var(--card);
+    border:1.5px solid var(--ink);
+    border-radius:4px;
+    position:relative;
+    padding:18px 16px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+    cursor:pointer;
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:4px 4px 0 var(--ink);}
+  .card:focus-visible{outline:3px solid var(--rust);outline-offset:2px;}
+
+  .photo{
+    height:140px;
+    border-radius:3px;
+    background:var(--paper-deep);
+    border:1px dashed var(--tag-string);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:var(--ink-soft);
+    overflow:hidden;
+  }
+  .photo img{width:100%;height:100%;object-fit:cover;}
+  .photo i{font-size:34px;}
+
+  .card-title{
+    font-family:'Archivo Expanded', sans-serif;
+    font-weight:700;
+    font-size:17px;
+    line-height:1.2;
+    margin:0;
+  }
+  .card-meta{
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .badge-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .feature-badge{
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    padding:3px 9px;
+    border-radius:12px;
+    background:var(--paper-deep);
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+  }
+  .feature-badge.on{background:#E4E9DD;color:var(--sage-dark);border-color:#C9D6BC;}
+
+  .price-tag{
+    position:absolute;
+    top:-14px;
+    right:14px;
+    transform:rotate(4deg);
+    background:var(--rust);
+    color:#fff;
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:14px;
+    padding:6px 12px 6px 16px;
+    border-radius:2px;
+    box-shadow:2px 2px 0 var(--rust-dark);
+  }
+  .price-tag::before{
+    content:'';
+    position:absolute;
+    left:-3px;
+    top:50%;
+    transform:translateY(-50%);
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--paper);
+    border:1.5px solid var(--rust-dark);
+  }
+  .price-tag.draft{background:var(--ink-soft);box-shadow:2px 2px 0 var(--ink);}
+
+  .status-row{display:flex;justify-content:space-between;align-items:center;margin-top:2px;}
+  .status-pill{
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    padding:3px 9px;
+    border-radius:12px;
+  }
+  .status-pill.available{background:#E4E9DD;color:var(--sage-dark);}
+  .status-pill.pending{background:#F3E3D3;color:var(--rust-dark);}
+  .status-pill.sold{background:#E6E3DA;color:var(--ink-soft);}
+  .status-pill.draft{background:#EDE7D8;color:var(--ink-soft);}
+
+  .empty-state{
+    text-align:center;
+    padding:70px 20px;
+    color:var(--ink-soft);
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+  }
+  .empty-state i{font-size:38px;display:block;margin-bottom:14px;color:var(--tag-string);}
+
+  .modal-veil{
+    min-height:100vh;
+    background:rgba(43,43,40,0.5);
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 16px;
+    position:absolute;
+    inset:0;
+    z-index:10;
+  }
+  .hidden{display:none;}
+  .modal{
+    background:var(--paper);
+    border:2px solid var(--ink);
+    border-radius:6px;
+    width:100%;
+    max-width:480px;
+    padding:26px 26px 22px;
+    box-shadow:6px 6px 0 var(--ink);
+  }
+  .modal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:18px;
+  }
+  .modal-head h2{
+    font-family:'Archivo Expanded', sans-serif;
+    font-weight:700;
+    font-size:21px;
+    margin:0;
+  }
+  .x-btn{
+    background:none;border:none;cursor:pointer;
+    color:var(--ink-soft);font-size:20px;line-height:1;
+    padding:4px;
+  }
+  .x-btn:hover{color:var(--ink);}
+
+  .field{margin-bottom:14px;}
+  .field label{
+    display:block;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .field input, .field textarea, .field select{
+    width:100%;
+    border:1.5px solid var(--ink);
+    border-radius:3px;
+    background:var(--card);
+    padding:10px 12px;
+    font-family:'Archivo', sans-serif;
+    font-size:14px;
+    color:var(--ink);
+  }
+  .field textarea{resize:vertical;min-height:64px;font-family:'Archivo',sans-serif;}
+  .field input:focus, .field textarea:focus, .field select:focus{
+    outline:2px solid var(--rust);outline-offset:1px;
+  }
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .field-hint{font-size:12px;color:var(--ink-soft);margin-top:6px;line-height:1.5;}
+
+  .toggle-row{display:flex;gap:10px;}
+  .toggle-pill{
+    flex:1;
+    text-align:center;
+    border:1.5px solid var(--ink);
+    border-radius:20px;
+    padding:9px 10px;
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    cursor:pointer;
+    background:var(--card);
+    user-select:none;
+  }
+  .toggle-pill.on{background:var(--sage);color:#fff;border-color:var(--sage-dark);}
+
+  .photo-upload{
+    border:1.5px dashed var(--ink);
+    border-radius:4px;
+    background:var(--card);
+    padding:14px;
+    text-align:center;
+    cursor:pointer;
+    color:var(--ink-soft);
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+  }
+  .photo-upload:hover{border-color:var(--rust);color:var(--rust-dark);}
+  .photo-preview{
+    width:100%;
+    height:140px;
+    object-fit:cover;
+    border-radius:4px;
+    margin-bottom:8px;
+    display:none;
+  }
+  .photo-preview.show{display:block;}
+
+  .submit-btn{
+    width:100%;
+    margin-top:6px;
+    background:var(--rust);
+    color:#fff;
+    border:none;
+    padding:13px;
+    border-radius:3px;
+    font-family:'Space Mono', monospace;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    cursor:pointer;
+  }
+  .submit-btn:hover{background:var(--rust-dark);}
+  .submit-btn:active{transform:scale(0.98);}
+  .submit-btn:disabled{opacity:0.55;cursor:not-allowed;}
+  .submit-btn.ghost{background:var(--card);color:var(--ink);border:1.5px solid var(--ink);}
+  .submit-btn.ghost:hover{background:var(--paper-deep);}
+
+  .detail-photo{
+    height:200px;
+    border-radius:4px;
+    background:var(--paper-deep);
+    border:1px dashed var(--tag-string);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--ink-soft);font-size:42px;
+    margin-bottom:16px;
+    overflow:hidden;
+  }
+  .detail-photo img{width:100%;height:100%;object-fit:cover;}
+  .detail-price{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:24px;
+    color:var(--rust-dark);
+    margin:2px 0 14px;
+  }
+  .detail-meta-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px 16px;
+    margin-bottom:14px;
+    padding:14px;
+    background:var(--paper-deep);
+    border-radius:4px;
+  }
+  .detail-meta-grid div span.k{
+    display:block;
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    letter-spacing:0.04em;
+    margin-bottom:2px;
+  }
+  .detail-meta-grid div span.v{font-size:13.5px;font-weight:500;}
+  .detail-desc{font-size:14px;line-height:1.6;color:var(--ink-soft);margin-bottom:16px;}
+
+  .seller-box{
+    border-top:1.5px dashed var(--line);
+    padding-top:16px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .seller-info{display:flex;align-items:center;gap:10px;}
+  .seller-avatar{
+    width:36px;height:36px;border-radius:50%;
+    background:var(--sage);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Archivo Expanded',sans-serif;font-weight:700;font-size:13px;
+  }
+  .seller-name{font-size:13.5px;font-weight:500;}
+  .seller-contact{font-size:12px;color:var(--ink-soft);font-family:'Space Mono',monospace;}
+  .contact-btn{
+    background:var(--ink);color:var(--paper);
+    border:none;padding:10px 16px;border-radius:3px;
+    font-family:'Space Mono',monospace;font-size:12px;
+    text-transform:uppercase;letter-spacing:0.03em;
+    cursor:pointer;white-space:nowrap;
+    text-decoration:none;
+    display:inline-block;
+  }
+  .contact-btn:hover{background:var(--rust-dark);}
+
+  .toast{
+    position:fixed;
+    bottom:24px;left:50%;
+    transform:translateX(-50%) translateY(0);
+    background:var(--ink);color:var(--paper);
+    padding:12px 20px;border-radius:4px;
+    font-family:'Space Mono',monospace;font-size:12.5px;
+    display:flex;align-items:center;gap:8px;
+    z-index:50;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.2s ease, transform 0.2s ease;
+    max-width:90vw;
+    text-align:center;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+  /* edit-code callout */
+  .code-callout{
+    background:var(--paper-deep);
+    border:1.5px dashed var(--ink);
+    border-radius:4px;
+    padding:16px;
+    text-align:center;
+    margin-bottom:16px;
+  }
+  .code-callout .code{
+    font-family:'Space Mono', monospace;
+    font-weight:700;
+    font-size:22px;
+    letter-spacing:0.06em;
+    color:var(--rust-dark);
+    margin:6px 0;
+  }
+  .code-callout p{margin:0;font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
+  .copy-row{display:flex;gap:8px;margin-top:10px;}
+  .copy-row button{flex:1;}
+
+  .find-row{display:flex;gap:8px;}
+  .find-row input{flex:1;}
+  .find-row button{flex-shrink:0;}
+
+  .conn-banner{
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    padding:9px 14px;
+    border-radius:4px;
+    margin-bottom:16px;
+    display:none;
+  }
+  .conn-banner.show{display:block;}
+  .conn-banner.demo{background:#F3E3D3;color:var(--rust-dark);border:1px solid #E8C7A6;}
+
+  @media (max-width:480px){
+    .field-row{grid-template-columns:1fr;}
+    .brand h1{font-size:21px;}
+    .post-btn span.label{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">
+Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a draft card with the model name, then add a photo, description, price, and helmet or lock options before posting it for buyers to see. Buyers browse posted bikes and call or text the seller.
+</h2>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="brand-mark"><i class="ti ti-bike" aria-hidden="true"></i></div>
+      <div>
+        <h1>Mission Bike Exchange</h1>
+        <div class="tagline">Oregon Portland Mission · call or text the seller direct</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="secondary-btn" id="findCardBtn">
+        <i class="ti ti-key" aria-hidden="true"></i>
+        <span class="label">Have an edit code?</span>
+      </button>
+      <button class="post-btn" id="sellBikeBtn">
+        <i class="ti ti-plus" aria-hidden="true"></i>
+        <span class="label">Sell bike</span>
+      </button>
+    </div>
+  </header>
+
+  <div id="connBanner" class="conn-banner demo">
+    <i class="ti ti-alert-triangle" aria-hidden="true"></i> Demo mode — the Google Sheet isn't connected yet, so listings only live in this browser tab and won't be shared with others. See setup notes below the board.
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="Search bikes…">
+  </div>
+  <div class="chip-row" id="chipRow"></div>
+  <p class="count-line" id="countLine"></p>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- STEP 1: Sell bike — just the model name -->
+<div class="modal-veil hidden" id="sellVeil">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Sell a bike</h2>
+      <button class="x-btn" id="closeSellBtn" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <form id="sellForm">
+      <div class="field">
+        <label for="s-title">Bike model</label>
+        <input type="text" id="s-title" placeholder="e.g. Trek FX 2" required autocomplete="off">
+        <p class="field-hint">This creates your card. You'll add the photo, price, and details next — nothing is visible to buyers until you finish and tap Post.</p>
+      </div>
+      <button type="submit" class="submit-btn">Create card</button>
+    </form>
+  </div>
+</div>
+
+<!-- STEP 2: Edit code reveal -->
+<div class="modal-veil hidden" id="codeVeil">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Card created</h2>
+      <button class="x-btn" id="closeCodeBtn" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="code-callout">
+      <p>Your private edit code — save this to finish your listing later</p>
+      <div class="code" id="revealCode">BIKE-0000</div>
+      <p id="revealLink" style="word-break:break-all;"></p>
+      <div class="copy-row">
+        <button type="button" class="secondary-btn" id="copyCodeBtn"><i class="ti ti-copy" aria-hidden="true"></i> Copy code</button>
+        <button type="button" class="secondary-btn" id="copyLinkBtn"><i class="ti ti-link" aria-hidden="true"></i> Copy link</button>
+      </div>
+    </div>
+    <button type="button" class="submit-btn" id="continueEditingBtn">Add photo &amp; details now</button>
+    <button type="button" class="submit-btn ghost" id="finishLaterBtn" style="margin-top:8px;">I'll finish later</button>
+  </div>
+</div>
+
+<!-- FIND CARD BY CODE -->
+<div class="modal-veil hidden" id="findVeil">
+  <div class="modal">
+    <div class="modal-head">
+      <h2>Find your card</h2>
+      <button class="x-btn" id="closeFindBtn" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="field">
+      <label for="find-code">Edit code</label>
+      <div class="find-row">
+        <input type="text" id="find-code" placeholder="BIKE-0000" autocomplete="off">
+        <button type="button" class="post-btn" id="findGoBtn">Go</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: Edit card (photo, description, price, helmet/lock) -->
+<div class="modal-veil hidden" id="editVeil">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="editHeading">Finish your listing</h2>
+      <button class="x-btn" id="closeEditBtn" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <form id="editForm">
+      <div class="field">
+        <label for="e-photo-input">Photo</label>
+        <img class="photo-preview" id="photoPreview" alt="">
+        <div class="photo-upload" id="photoUploadBtn">
+          <i class="ti ti-camera" aria-hidden="true"></i> Tap to add a photo
+        </div>
+        <input type="file" id="e-photo-input" accept="image/*" style="display:none;">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="e-type">Type</label>
+          <select id="e-type">
+            <option>Road</option>
+            <option>Hybrid</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="e-size">Frame size</label>
+          <input type="text" id="e-size" placeholder="e.g. M / 54cm" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Frame style</label>
+        <div class="toggle-row">
+          <div class="toggle-pill" id="toggle-stepthrough" data-on="false">Step-through</div>
+          <div class="toggle-pill on" id="toggle-standard" data-on="true">Standard</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Brakes</label>
+        <div class="toggle-row">
+          <div class="toggle-pill" id="toggle-discbrakes" data-on="false">Disc brakes</div>
+          <div class="toggle-pill on" id="toggle-rimbrakes" data-on="true">Rim brakes</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Included with sale</label>
+        <div class="toggle-row">
+          <div class="toggle-pill" id="toggle-helmet" data-on="false">Helmet</div>
+          <div class="toggle-pill" id="toggle-lock" data-on="false">Lock</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="e-desc">Description</label>
+        <textarea id="e-desc" placeholder="Condition, mileage, anything a buyer should know…" required></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="e-price">Asking price ($)</label>
+          <input type="number" id="e-price" min="0" placeholder="150" required>
+        </div>
+        <div class="field">
+          <label for="e-phone">Phone number</label>
+          <input type="tel" id="e-phone" placeholder="(503) 555-0123" required>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="postSubmitBtn">Post listing</button>
+      <button type="button" class="submit-btn ghost" id="saveDraftBtn" style="margin-top:8px;">Save draft, don't post yet</button>
+    </form>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-veil hidden" id="detailVeil">
+  <div class="modal" id="detailModalInner"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="wrap" style="padding-top:8px;">
+  <details style="font-family:'Space Mono', monospace; font-size:11.5px; color:var(--ink-soft);">
+    <summary style="cursor:pointer;">Setup notes (for whoever maintains this site)</summary>
+    <p style="line-height:1.6; max-width:640px;">
+      This page is wired for Google Sheets but currently runs in local demo mode (see <code>APPS_SCRIPT_URL</code> and <code>DEMO_MODE</code> near the top of the script). It needs a companion Apps Script (<code>AppsScript-Code.gs</code>) deployed as a web app inside a Google Sheet — once deployed, paste its URL in and set <code>DEMO_MODE = false</code>. The board will then read/write real shared data — drafts, edit codes, photo uploads to Drive, and posted listings — instead of this tab's memory. Listings refresh automatically every 15 seconds so other people's posts show up without a manual reload.
+    </p>
+  </details>
+</div>
+
+<!-- Google Sheets / Apps Script backend config -->
+<script>
+  // ---------------------------------------------------------------
+  // PASTE YOUR APPS SCRIPT WEB APP URL HERE, then set DEMO_MODE to false.
+  // Get this by deploying AppsScript-Code.gs as a web app (see comments
+  // at the bottom of that file) — it looks like:
+  // https://script.google.com/macros/s/AKfycb.../exec
+  // ---------------------------------------------------------------
+  var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwdPQIrFEQKE6mi2geWzF_jrWPIi7XYlRSM1Ug2COoII7EjRZSO4MQBs0azM02pql5-/exec";
+  var DEMO_MODE = false; // set to false once APPS_SCRIPT_URL above is real
+
+  window.__bikeApp = window.__bikeApp || {};
+  window.__bikeApp.DEMO_MODE = DEMO_MODE;
+  window.__bikeApp.APPS_SCRIPT_URL = APPS_SCRIPT_URL;
+
+  window.dispatchEvent(new Event('bikeapp-backend-ready'));
+</script>
+
+<script>
+(function(){
+
+  var TYPES = ['All','Road','Hybrid'];
+  var STATUS = { DRAFT:'draft', AVAILABLE:'available', PENDING:'pending', SOLD:'sold' };
+
+  function genCode(){
+    var n = Math.floor(1000 + Math.random() * 9000);
+    return 'BIKE-' + n;
+  }
+  function genId(){
+    return 'bk_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+  }
+
+  var seedBikes = [
+    {id:'b1', code:'BIKE-1001', title:'Trek FX 2', type:'Hybrid', size:'M / 17.5"', price:180,
+     stepThrough:false, discBrakes:true, helmet:true, lock:true,
+     desc:'Flat-bar hybrid, great for getting around the area. Hydraulic disc brakes, recently tuned up. Comes with a helmet and a cable lock.',
+     phone:'(503) 555-0148', status:STATUS.AVAILABLE, photo:null},
+    {id:'b2', code:'BIKE-1002', title:'Specialized Allez', type:'Road', size:'54cm', price:250,
+     stepThrough:false, discBrakes:false, helmet:false, lock:true,
+     desc:'Aluminum road bike, rim brakes, light and fast for longer days. Comes with a u-lock. No helmet included.',
+     phone:'(971) 555-0119', status:STATUS.AVAILABLE, photo:null},
+    {id:'b3', code:'BIKE-1003', title:'Giant Cypress', type:'Hybrid', size:'Step-through, M', price:140,
+     stepThrough:true, discBrakes:false, helmet:true, lock:false,
+     desc:'Comfortable step-through hybrid, easy on-off. Rim brakes, well maintained. Helmet included, no lock.',
+     phone:'(503) 555-0177', status:STATUS.PENDING, photo:null}
+  ];
+
+  // In-memory store used in demo mode. In live mode this mirrors Firestore via onSnapshot.
+  var bikes = seedBikes.slice();
+  var activeType = 'All';
+  var searchTerm = '';
+  var pendingPhotoDataUrl = null;
+  var currentEditId = null; // id of bike currently open in the edit modal
+
+  var grid = document.getElementById('grid');
+  var chipRow = document.getElementById('chipRow');
+  var countLine = document.getElementById('countLine');
+  var searchInput = document.getElementById('searchInput');
+  var toast = document.getElementById('toast');
+  var connBanner = document.getElementById('connBanner');
+
+  function isDemo(){ return !window.__bikeApp || window.__bikeApp.DEMO_MODE; }
+
+  function showToast(msg){
+    toast.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> ' + msg;
+    toast.classList.add('show');
+    clearTimeout(showToast._t);
+    showToast._t = setTimeout(function(){ toast.classList.remove('show'); }, 2800);
+  }
+
+  function escapeHtml(str){
+    var div = document.createElement('div');
+    div.textContent = str == null ? '' : str;
+    return div.innerHTML;
+  }
+
+  function statusLabel(s){
+    if(s === STATUS.DRAFT) return 'Draft';
+    if(s === STATUS.AVAILABLE) return 'Available';
+    if(s === STATUS.PENDING) return 'Pending';
+    return 'Sold';
+  }
+
+  /* ---------------- DATA LAYER ----------------
+     These functions are the seam between UI and storage.
+     In demo mode they operate on the in-memory `bikes` array.
+     In live mode they call the Apps Script web app, which reads/writes
+     the Google Sheet and saves photos to Drive.
+     Swapping DEMO_MODE later does not require touching the UI code below. */
+
+  function apiUrl(action, params){
+    var url = new URL(window.__bikeApp.APPS_SCRIPT_URL);
+    url.searchParams.set('action', action);
+    Object.keys(params || {}).forEach(function(k){ url.searchParams.set(k, params[k]); });
+    return url.toString();
+  }
+
+  function apiCall(action, params){
+    // Apps Script web apps respond to GET cleanly without CORS preflight,
+    // so all calls (including writes) go through GET with query params.
+    var url = apiUrl(action, params);
+    console.log('[bikeapp] calling:', url);
+    return fetch(url).then(function(res){
+      console.log('[bikeapp] response status:', res.status, 'ok:', res.ok, 'redirected:', res.redirected, 'finalUrl:', res.url);
+      return res.text().then(function(text){
+        console.log('[bikeapp] raw response text:', text);
+        try{
+          return JSON.parse(text);
+        }catch(parseErr){
+          console.error('[bikeapp] response was not valid JSON:', parseErr);
+          throw new Error('Server did not return valid JSON (got: ' + text.slice(0,200) + ')');
+        }
+      });
+    }).catch(function(fetchErr){
+      console.error('[bikeapp] fetch failed entirely:', fetchErr);
+      throw fetchErr;
+    });
+  }
+
+  function publicBikes(){
+    // Buyers only ever see posted (non-draft) listings.
+    return bikes.filter(function(b){ return b.status !== STATUS.DRAFT; });
+  }
+
+  function refreshFromSheet(){
+    if(isDemo()) return Promise.resolve();
+    return apiCall('list', {}).then(function(res){
+      if(res.error){ console.error(res.error); return; }
+      // Merge: keep any locally-known drafts (sheet only returns public ones),
+      // replace public listings with the latest from the sheet.
+      var localDrafts = bikes.filter(function(b){ return b.status === STATUS.DRAFT; });
+      bikes = localDrafts.concat(res.bikes || []);
+    });
+  }
+
+  function findByCode(code){
+    code = (code || '').trim().toUpperCase();
+    if(isDemo()){
+      return Promise.resolve(bikes.filter(function(b){ return b.code === code; })[0] || null);
+    }
+    return apiCall('getByCode', { code: code }).then(function(res){
+      if(res.error || !res.bike) return null;
+      // Keep a local copy so the edit modal can read/write it synchronously.
+      var existingIdx = bikes.findIndex(function(b){ return b.code === code; });
+      if(existingIdx > -1) bikes[existingIdx] = res.bike; else bikes.unshift(res.bike);
+      return res.bike;
+    });
+  }
+
+  function createDraft(title){
+    if(isDemo()){
+      var bike = {
+        id: genId(), code: genCode(), title: title.trim(),
+        type:'Road', size:'', price:null,
+        stepThrough:false, discBrakes:false, helmet:false, lock:false,
+        desc:'', phone:'', status: STATUS.DRAFT, photo:null
+      };
+      bikes.unshift(bike);
+      return Promise.resolve(bike);
+    }
+    return apiCall('createDraft', { title: title.trim() }).then(function(res){
+      if(res.error) throw new Error(res.error);
+      var bike = res.bike;
+      bike.photo = bike.photoUrl || null; // normalize field name for UI
+      bikes.unshift(bike);
+      return bike;
+    });
+  }
+
+  function saveBikeFields(id, fields, publish){
+    var b = bikes.filter(function(x){ return x.id === id; })[0];
+    if(!b) return Promise.resolve(null);
+    Object.assign(b, fields);
+    if(publish) b.status = STATUS.AVAILABLE;
+
+    if(isDemo()){
+      return Promise.resolve(b);
+    }
+
+    var payload = {
+      code: b.code,
+      fields: {
+        type: fields.type, size: fields.size, price: fields.price,
+        stepThrough: fields.stepThrough, discBrakes: fields.discBrakes,
+        helmet: fields.helmet, lock: fields.lock,
+        desc: fields.desc, phone: fields.phone
+      },
+      publish: !!publish
+    };
+    // Photo: if it's a freshly chosen data URL, send it for upload.
+    // If it's already a Drive URL (unchanged), leave photoBase64 out.
+    if(fields.photo && fields.photo.indexOf('data:image') === 0){
+      payload.photoBase64 = fields.photo;
+    } else {
+      payload.fields.photoUrl = fields.photo || '';
+    }
+
+    return apiCall('saveFields', { payload: JSON.stringify(payload) }).then(function(res){
+      if(res.error) throw new Error(res.error);
+      var updated = res.bike;
+      updated.photo = updated.photoUrl || null;
+      Object.assign(b, updated);
+      if(res.warning) b._lastWarning = res.warning;
+      return b;
+    });
+  }
+
+  /* ---------------- RENDER: BOARD ---------------- */
+
+  function renderChips(){
+    chipRow.innerHTML = '';
+    TYPES.forEach(function(t){
+      var btn = document.createElement('button');
+      btn.className = 'chip' + (t === activeType ? ' active' : '');
+      btn.textContent = t;
+      btn.addEventListener('click', function(){
+        activeType = t;
+        renderChips();
+        renderGrid();
+      });
+      chipRow.appendChild(btn);
+    });
+  }
+
+  function matchesFilters(b){
+    var typeOk = activeType === 'All' || b.type === activeType;
+    var term = searchTerm.trim().toLowerCase();
+    var searchOk = !term ||
+      b.title.toLowerCase().indexOf(term) > -1 ||
+      (b.size||'').toLowerCase().indexOf(term) > -1 ||
+      b.type.toLowerCase().indexOf(term) > -1;
+    return typeOk && searchOk;
+  }
+
+  function photoBlock(b){
+    if(b.photo){
+      return '<img src="' + b.photo + '" alt="Photo of ' + escapeHtml(b.title) + '">';
+    }
+    return '<i class="ti ti-bike" aria-hidden="true"></i>';
+  }
+
+  function renderGrid(){
+    var visible = publicBikes().filter(matchesFilters);
+    countLine.textContent = visible.length + (visible.length === 1 ? ' bike listed' : ' bikes listed');
+    grid.innerHTML = '';
+
+    if(visible.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.style.gridColumn = '1 / -1';
+      empty.innerHTML = '<i class="ti ti-search-off" aria-hidden="true"></i>No bikes match that search.';
+      grid.appendChild(empty);
+      return;
+    }
+
+    visible.forEach(function(b){
+      var card = document.createElement('div');
+      card.className = 'card';
+      card.tabIndex = 0;
+      card.setAttribute('role','button');
+      card.setAttribute('aria-label', 'View details for ' + b.title);
+
+      var badges = '';
+      badges += '<span class="feature-badge">' + (b.stepThrough ? 'Step-through' : 'Standard frame') + '</span>';
+      badges += '<span class="feature-badge">' + (b.discBrakes ? 'Disc brakes' : 'Rim brakes') + '</span>';
+      if(b.helmet) badges += '<span class="feature-badge on">+ Helmet</span>';
+      if(b.lock) badges += '<span class="feature-badge on">+ Lock</span>';
+
+      var priceHtml = (b.price != null) ? '<div class="price-tag">$' + Number(b.price).toLocaleString() + '</div>' : '';
+
+      card.innerHTML =
+        priceHtml +
+        '<div class="photo">' + photoBlock(b) + '</div>' +
+        '<h3 class="card-title">' + escapeHtml(b.title) + '</h3>' +
+        '<div class="card-meta"><span>' + escapeHtml(b.type) + '</span><span>·</span><span>' + escapeHtml(b.size||'—') + '</span></div>' +
+        '<div class="badge-row">' + badges + '</div>' +
+        '<div class="status-row"><span class="status-pill ' + b.status + '">' + statusLabel(b.status) + '</span></div>';
+
+      card.addEventListener('click', function(){ openDetail(b.id); });
+      card.addEventListener('keydown', function(e){
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openDetail(b.id); }
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  searchInput.addEventListener('input', function(e){
+    searchTerm = e.target.value;
+    renderGrid();
+  });
+
+  /* ---------------- STEP 1: SELL BIKE (create draft) ---------------- */
+  var sellVeil = document.getElementById('sellVeil');
+  var sellBikeBtn = document.getElementById('sellBikeBtn');
+  var closeSellBtn = document.getElementById('closeSellBtn');
+  var sellForm = document.getElementById('sellForm');
+
+  sellBikeBtn.addEventListener('click', function(){
+    document.getElementById('s-title').value = '';
+    sellVeil.classList.remove('hidden');
+    setTimeout(function(){ document.getElementById('s-title').focus(); }, 50);
+  });
+  closeSellBtn.addEventListener('click', function(){ sellVeil.classList.add('hidden'); });
+  sellVeil.addEventListener('click', function(e){ if(e.target === sellVeil) sellVeil.classList.add('hidden'); });
+
+  sellForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var title = document.getElementById('s-title').value.trim();
+    if(!title) return;
+    sellVeil.classList.add('hidden');
+    createDraft(title).then(function(bike){
+      showCodeReveal(bike);
+    }).catch(function(err){
+      console.error(err);
+      showToast('Could not create card — check your connection and try again.');
+    });
+  });
+
+  /* ---------------- STEP 2: CODE REVEAL ---------------- */
+  var codeVeil = document.getElementById('codeVeil');
+  var closeCodeBtn = document.getElementById('closeCodeBtn');
+  var revealCode = document.getElementById('revealCode');
+  var revealLink = document.getElementById('revealLink');
+  var copyCodeBtn = document.getElementById('copyCodeBtn');
+  var copyLinkBtn = document.getElementById('copyLinkBtn');
+  var continueEditingBtn = document.getElementById('continueEditingBtn');
+  var finishLaterBtn = document.getElementById('finishLaterBtn');
+
+  function editLinkFor(code){
+    var base = window.location.href.split('#')[0].split('?')[0];
+    return base + '?edit=' + encodeURIComponent(code);
+  }
+
+  function showCodeReveal(bike){
+    revealCode.textContent = bike.code;
+    var link = editLinkFor(bike.code);
+    revealLink.innerHTML = '<a href="' + link + '" style="color:var(--rust-dark);">' + link + '</a>';
+    codeVeil.classList.remove('hidden');
+    codeVeil.dataset.bikeId = bike.id;
+  }
+  closeCodeBtn.addEventListener('click', function(){ codeVeil.classList.add('hidden'); renderGrid(); });
+  codeVeil.addEventListener('click', function(e){ if(e.target === codeVeil){ codeVeil.classList.add('hidden'); renderGrid(); } });
+
+  function copyText(text){
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){ showToast('Copied'); }).catch(function(){ showToast('Could not copy — select and copy manually'); });
+    } else {
+      showToast('Could not copy — select and copy manually');
+    }
+  }
+  copyCodeBtn.addEventListener('click', function(){ copyText(revealCode.textContent); });
+  copyLinkBtn.addEventListener('click', function(){ copyText(editLinkFor(revealCode.textContent)); });
+
+  continueEditingBtn.addEventListener('click', function(){
+    var id = codeVeil.dataset.bikeId;
+    codeVeil.classList.add('hidden');
+    openEditModal(id);
+  });
+  finishLaterBtn.addEventListener('click', function(){
+    codeVeil.classList.add('hidden');
+    renderGrid();
+    showToast('Draft saved — use your edit code anytime to finish posting.');
+  });
+
+  /* ---------------- FIND CARD BY CODE ---------------- */
+  var findVeil = document.getElementById('findVeil');
+  var findCardBtn = document.getElementById('findCardBtn');
+  var closeFindBtn = document.getElementById('closeFindBtn');
+  var findCodeInput = document.getElementById('find-code');
+  var findGoBtn = document.getElementById('findGoBtn');
+
+  findCardBtn.addEventListener('click', function(){
+    findCodeInput.value = '';
+    findVeil.classList.remove('hidden');
+    setTimeout(function(){ findCodeInput.focus(); }, 50);
+  });
+  closeFindBtn.addEventListener('click', function(){ findVeil.classList.add('hidden'); });
+  findVeil.addEventListener('click', function(e){ if(e.target === findVeil) findVeil.classList.add('hidden'); });
+
+  function tryOpenByCode(code){
+    findByCode(code).then(function(b){
+      if(!b){
+        showToast('No card found with that code.');
+        return;
+      }
+      findVeil.classList.add('hidden');
+      openEditModal(b.id);
+    }).catch(function(err){
+      console.error(err);
+      showToast('Could not look up that code — check your connection and try again.');
+    });
+  }
+  findGoBtn.addEventListener('click', function(){ tryOpenByCode(findCodeInput.value); });
+  findCodeInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); tryOpenByCode(findCodeInput.value); } });
+
+  // Support arriving via a direct edit link: ?edit=BIKE-1234
+  (function checkUrlForEditCode(){
+    var params = new URLSearchParams(window.location.search);
+    var code = params.get('edit');
+    if(code){
+      setTimeout(function(){ tryOpenByCode(code); }, 100);
+    }
+  })();
+
+  /* ---------------- STEP 3: EDIT / FINISH LISTING ---------------- */
+  var editVeil = document.getElementById('editVeil');
+  var editForm = document.getElementById('editForm');
+  var closeEditBtn = document.getElementById('closeEditBtn');
+  var editHeading = document.getElementById('editHeading');
+  var photoInput = document.getElementById('e-photo-input');
+  var photoUploadBtn = document.getElementById('photoUploadBtn');
+  var photoPreview = document.getElementById('photoPreview');
+  var postSubmitBtn = document.getElementById('postSubmitBtn');
+  var saveDraftBtn = document.getElementById('saveDraftBtn');
+
+  closeEditBtn.addEventListener('click', function(){ editVeil.classList.add('hidden'); renderGrid(); });
+  editVeil.addEventListener('click', function(e){ if(e.target === editVeil){ editVeil.classList.add('hidden'); renderGrid(); } });
+
+  photoUploadBtn.addEventListener('click', function(){ photoInput.click(); });
+  photoInput.addEventListener('change', function(){
+    var file = photoInput.files && photoInput.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e){
+      pendingPhotoDataUrl = e.target.result;
+      photoPreview.src = pendingPhotoDataUrl;
+      photoPreview.classList.add('show');
+      photoUploadBtn.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> Change photo';
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function wireToggle(idA, idB, exclusive){
+    var elA = document.getElementById(idA);
+    var elB = idB ? document.getElementById(idB) : null;
+    elA.addEventListener('click', function(){
+      if(exclusive && elB){
+        elA.classList.add('on'); elA.dataset.on = 'true';
+        elB.classList.remove('on'); elB.dataset.on = 'false';
+      } else {
+        var isOn = elA.dataset.on === 'true';
+        elA.classList.toggle('on', !isOn);
+        elA.dataset.on = (!isOn).toString();
+      }
+    });
+  }
+  wireToggle('toggle-stepthrough','toggle-standard', true);
+  wireToggle('toggle-standard','toggle-stepthrough', true);
+  wireToggle('toggle-discbrakes','toggle-rimbrakes', true);
+  wireToggle('toggle-rimbrakes','toggle-discbrakes', true);
+  wireToggle('toggle-helmet', null, false);
+  wireToggle('toggle-lock', null, false);
+
+  function setToggle(id, on){
+    var el = document.getElementById(id);
+    el.classList.toggle('on', !!on);
+    el.dataset.on = (!!on).toString();
+  }
+
+  function openEditModal(id){
+    var b = bikes.filter(function(x){ return x.id === id; })[0];
+    if(!b) return;
+    currentEditId = id;
+
+    editHeading.textContent = (b.status === STATUS.DRAFT) ? 'Finish your listing' : 'Edit your listing';
+    document.getElementById('e-type').value = b.type || 'Road';
+    document.getElementById('e-size').value = b.size || '';
+    document.getElementById('e-desc').value = b.desc || '';
+    document.getElementById('e-price').value = b.price != null ? b.price : '';
+    document.getElementById('e-phone').value = b.phone || '';
+
+    setToggle('toggle-stepthrough', b.stepThrough);
+    setToggle('toggle-standard', !b.stepThrough);
+    setToggle('toggle-discbrakes', b.discBrakes);
+    setToggle('toggle-rimbrakes', !b.discBrakes);
+    setToggle('toggle-helmet', b.helmet);
+    setToggle('toggle-lock', b.lock);
+
+    pendingPhotoDataUrl = b.photo || null;
+    if(b.photo){
+      photoPreview.src = b.photo;
+      photoPreview.classList.add('show');
+      photoUploadBtn.innerHTML = '<i class="ti ti-refresh" aria-hidden="true"></i> Change photo';
+    } else {
+      photoPreview.classList.remove('show');
+      photoPreview.src = '';
+      photoUploadBtn.innerHTML = '<i class="ti ti-camera" aria-hidden="true"></i> Tap to add a photo';
+    }
+
+    postSubmitBtn.textContent = (b.status === STATUS.DRAFT) ? 'Post listing' : 'Save changes';
+    saveDraftBtn.style.display = (b.status === STATUS.DRAFT) ? 'block' : 'none';
+
+    editVeil.classList.remove('hidden');
+  }
+
+  function collectFields(){
+    return {
+      type: document.getElementById('e-type').value,
+      size: document.getElementById('e-size').value.trim(),
+      price: parseFloat(document.getElementById('e-price').value),
+      desc: document.getElementById('e-desc').value.trim(),
+      phone: document.getElementById('e-phone').value.trim(),
+      stepThrough: document.getElementById('toggle-stepthrough').dataset.on === 'true',
+      discBrakes: document.getElementById('toggle-discbrakes').dataset.on === 'true',
+      helmet: document.getElementById('toggle-helmet').dataset.on === 'true',
+      lock: document.getElementById('toggle-lock').dataset.on === 'true',
+      photo: pendingPhotoDataUrl
+    };
+  }
+
+  editForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    var fields = collectFields();
+    if(!fields.size || isNaN(fields.price) || !fields.desc || !fields.phone){
+      showToast('Please fill in size, price, description, and phone before posting.');
+      return;
+    }
+    postSubmitBtn.disabled = true;
+    postSubmitBtn.textContent = 'Posting…';
+    saveBikeFields(currentEditId, fields, true).then(function(b){
+      editVeil.classList.add('hidden');
+      renderGrid();
+      if(b && b._lastWarning){
+        showToast(b._lastWarning);
+        delete b._lastWarning;
+      } else if(b){
+        showToast('"' + b.title + '" is now posted on the board.');
+      }
+    }).catch(function(err){
+      console.error(err);
+      showToast('Could not post — check your connection and try again.');
+    }).finally(function(){
+      postSubmitBtn.disabled = false;
+      postSubmitBtn.textContent = 'Post listing';
+    });
+  });
+
+  saveDraftBtn.addEventListener('click', function(){
+    var fields = collectFields();
+    if(isNaN(fields.price)) fields.price = null;
+    saveDraftBtn.disabled = true;
+    saveBikeFields(currentEditId, fields, false).then(function(){
+      editVeil.classList.add('hidden');
+      renderGrid();
+      showToast('Draft saved — not visible to buyers yet.');
+    }).catch(function(err){
+      console.error(err);
+      showToast('Could not save — check your connection and try again.');
+    }).finally(function(){
+      saveDraftBtn.disabled = false;
+    });
+  });
+
+  /* ---------------- DETAIL MODAL (buyer view) ---------------- */
+  var detailVeil = document.getElementById('detailVeil');
+  var detailInner = document.getElementById('detailModalInner');
+
+  function telHref(phone){
+    return 'tel:' + (phone||'').replace(/[^0-9+]/g, '');
+  }
+
+  function openDetail(id){
+    var b = bikes.filter(function(x){ return x.id === id; })[0];
+    if(!b) return;
+
+    detailInner.innerHTML =
+      '<div class="modal-head">' +
+        '<h2>' + escapeHtml(b.title) + '</h2>' +
+        '<button class="x-btn" id="closeDetailBtn" aria-label="Close"><i class="ti ti-x"></i></button>' +
+      '</div>' +
+      '<div class="detail-photo">' + photoBlock(b) + '</div>' +
+      '<div class="detail-price">$' + Number(b.price).toLocaleString() + '</div>' +
+      '<div class="detail-meta-grid">' +
+        '<div><span class="k">Type</span><span class="v">' + escapeHtml(b.type) + '</span></div>' +
+        '<div><span class="k">Frame size</span><span class="v">' + escapeHtml(b.size) + '</span></div>' +
+        '<div><span class="k">Frame style</span><span class="v">' + (b.stepThrough ? 'Step-through' : 'Standard') + '</span></div>' +
+        '<div><span class="k">Brakes</span><span class="v">' + (b.discBrakes ? 'Disc' : 'Rim') + '</span></div>' +
+        '<div><span class="k">Helmet included</span><span class="v">' + (b.helmet ? 'Yes' : 'No') + '</span></div>' +
+        '<div><span class="k">Lock included</span><span class="v">' + (b.lock ? 'Yes' : 'No') + '</span></div>' +
+        '<div><span class="k">Status</span><span class="v">' + statusLabel(b.status) + '</span></div>' +
+      '</div>' +
+      '<p class="detail-desc">' + escapeHtml(b.desc) + '</p>' +
+      '<div class="seller-box">' +
+        '<div class="seller-info">' +
+          '<div class="seller-avatar"><i class="ti ti-phone" aria-hidden="true" style="font-size:16px;"></i></div>' +
+          '<div><div class="seller-name">Seller phone</div><div class="seller-contact">' + escapeHtml(b.phone) + '</div></div>' +
+        '</div>' +
+        '<a class="contact-btn" href="' + telHref(b.phone) + '">Call / text</a>' +
+      '</div>';
+
+    detailVeil.classList.remove('hidden');
+    document.getElementById('closeDetailBtn').addEventListener('click', function(){
+      detailVeil.classList.add('hidden');
+    });
+  }
+
+  detailVeil.addEventListener('click', function(e){ if(e.target === detailVeil) detailVeil.classList.add('hidden'); });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      sellVeil.classList.add('hidden');
+      codeVeil.classList.add('hidden');
+      findVeil.classList.add('hidden');
+      editVeil.classList.add('hidden');
+      detailVeil.classList.add('hidden');
+    }
+  });
+
+  /* ---------------- INIT ---------------- */
+  function init(){
+    if(isDemo()){
+      connBanner.classList.add('show');
+      renderChips();
+      renderGrid();
+      return;
+    }
+    renderChips();
+    refreshFromSheet().then(renderGrid).catch(function(err){
+      console.error(err);
+      connBanner.textContent = '';
+      connBanner.innerHTML = '<i class="ti ti-alert-triangle" aria-hidden="true"></i> Could not reach the bike sheet — check the Apps Script URL and that it is deployed for "Anyone".';
+      connBanner.classList.add('show');
+      renderGrid();
+    });
+    // Sheets has no real-time push like Firestore, so poll periodically
+    // to pick up listings posted by other people.
+    setInterval(function(){
+      refreshFromSheet().then(renderGrid);
+    }, 15000);
+  }
+
+  window.addEventListener('bikeapp-backend-ready', init);
+  // Fallback in case the config script is slow or blocked — still show the demo UI.
+  setTimeout(function(){ if(!grid.children.length) init(); }, 800);
+})();
+</script>
+</body>
+</html>
