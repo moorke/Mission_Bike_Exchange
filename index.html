@@ -3,7 +3,7 @@
   MISSION BIKE EXCHANGE
   Oregon Portland Mission — card-based bike marketplace for missionaries
 
-  VERSION: 1.1.0
+  VERSION: 1.0
   LAST UPDATED: 2026-06-20
 
   DESCRIPTION:
@@ -11,20 +11,17 @@
   private edit code/link, then return to add photo, price, description,
   helmet/lock availability, and phone number before posting it live to
   the board. Buyers browse posted bikes and tap to call/text the seller.
+  Sellers can mark a listing sold or delete it using the same edit code.
 
-  BACKEND: Google Sheets via Apps Script web app (see AppsScript-Code.gs).
-  Reads happen over GET; saves with a photo go over POST, since base64
-  photo data is too large to fit in a URL's query string.
+  BACKEND: Google Sheets via Apps Script web app (see AppsScript-Code.gs,
+  also v1.0). Reads happen over GET; saves with a photo go over POST,
+  since base64 photo data is too large to fit in a URL's query string.
 
-  CHANGE LOG:
-  - 1.1.0 (2026-06-20): Fixed board thumbnails not showing posted photos
-    (photoUrl/photo field name mismatch in refreshFromSheet + findByCode).
-    Added live phone number formatting, (xxx) xxx-xxxx, to avoid Google
-    Sheets silently storing digit-only phone numbers as numbers.
-  - 1.0.1 (2026-06-19): Switched photo-saving request from GET to POST to
-    fix "Could not post" errors caused by URL length limits on photo data.
-  - 1.0.0 (2026-06-19): Initial Google Sheets-backed version — draft/edit
-    code/post flow, photo upload, board with search and type filters.
+  RELEASE NOTES (v1.0):
+  First fully working release — draft/edit-code/post flow, photo upload
+  to Drive, search and type filters, mark as sold, delete listing, and
+  live phone number formatting. Built and debugged through several
+  iterations before landing here; future changes will be tracked below.
 
   SETUP: see the "Setup notes" details block near the bottom of this file,
   and APPS_SCRIPT_URL / DEMO_MODE in the script tag below.
@@ -419,6 +416,8 @@
   .submit-btn:disabled{opacity:0.55;cursor:not-allowed;}
   .submit-btn.ghost{background:var(--card);color:var(--ink);border:1.5px solid var(--ink);}
   .submit-btn.ghost:hover{background:var(--paper-deep);}
+  .submit-btn.danger{background:var(--card);color:var(--color-text-danger, #A32D2D);border:1.5px solid var(--color-border-danger, #A32D2D);}
+  .submit-btn.danger:hover{background:var(--color-background-danger, #FCEBEB);}
 
   .detail-photo{
     height:200px;
@@ -719,7 +718,24 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 
       <button type="submit" class="submit-btn" id="postSubmitBtn">Post listing</button>
       <button type="button" class="submit-btn ghost" id="saveDraftBtn" style="margin-top:8px;">Save draft, don't post yet</button>
+      <button type="button" class="submit-btn ghost" id="markSoldBtn" style="margin-top:8px;">Mark as sold</button>
+      <button type="button" class="submit-btn danger" id="deleteCardBtn" style="margin-top:8px;">Delete this listing</button>
     </form>
+  </div>
+</div>
+
+<!-- DELETE CONFIRMATION -->
+<div class="modal-veil hidden" id="deleteConfirmVeil">
+  <div class="modal" style="max-width:380px;">
+    <div class="modal-head">
+      <h2>Delete this listing?</h2>
+      <button class="x-btn" id="closeDeleteConfirmBtn" aria-label="Close"><i class="ti ti-x"></i></button>
+    </div>
+    <p style="font-size:14px; color:var(--ink-soft); line-height:1.6; margin:0 0 18px;">
+      This removes the card permanently — it can't be undone. If the bike just sold, consider "Mark as sold" instead so there's a record of it.
+    </p>
+    <button type="button" class="submit-btn danger" id="confirmDeleteBtn">Yes, delete it</button>
+    <button type="button" class="submit-btn ghost" id="cancelDeleteBtn" style="margin-top:8px;">Cancel</button>
   </div>
 </div>
 
@@ -732,7 +748,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 
 <div class="wrap" style="padding-top:8px;">
   <p style="font-family:'Space Mono', monospace; font-size:11px; color:var(--ink-soft); margin:0 0 6px;">
-    Mission Bike Exchange — v1.1.0 (2026-06-20)
+    Mission Bike Exchange — v1.0 (2026-06-20)
   </p>
   <details style="font-family:'Space Mono', monospace; font-size:11.5px; color:var(--ink-soft);">
     <summary style="cursor:pointer;">Setup notes (for whoever maintains this site)</summary>
@@ -982,6 +998,36 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
     });
   }
 
+  function markSold(id){
+    var b = bikes.filter(function(x){ return x.id === id; })[0];
+    if(!b) return Promise.resolve(null);
+    b.status = STATUS.SOLD;
+
+    if(isDemo()){
+      return Promise.resolve(b);
+    }
+    return apiCall('markSold', { code: b.code }).then(function(res){
+      if(res.error) throw new Error(res.error);
+      Object.assign(b, res.bike);
+      return b;
+    });
+  }
+
+  function deleteListing(id){
+    var b = bikes.filter(function(x){ return x.id === id; })[0];
+    if(!b) return Promise.resolve(false);
+
+    if(isDemo()){
+      bikes = bikes.filter(function(x){ return x.id !== id; });
+      return Promise.resolve(true);
+    }
+    return apiCall('deleteListing', { code: b.code }).then(function(res){
+      if(res.error) throw new Error(res.error);
+      bikes = bikes.filter(function(x){ return x.id !== id; });
+      return true;
+    });
+  }
+
   /* ---------------- RENDER: BOARD ---------------- */
 
   function renderChips(){
@@ -1189,6 +1235,12 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
   var photoPreview = document.getElementById('photoPreview');
   var postSubmitBtn = document.getElementById('postSubmitBtn');
   var saveDraftBtn = document.getElementById('saveDraftBtn');
+  var markSoldBtn = document.getElementById('markSoldBtn');
+  var deleteCardBtn = document.getElementById('deleteCardBtn');
+  var deleteConfirmVeil = document.getElementById('deleteConfirmVeil');
+  var closeDeleteConfirmBtn = document.getElementById('closeDeleteConfirmBtn');
+  var confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+  var cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
   var phoneInput = document.getElementById('e-phone');
 
   function formatPhone(value){
@@ -1283,6 +1335,8 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 
     postSubmitBtn.textContent = (b.status === STATUS.DRAFT) ? 'Post listing' : 'Save changes';
     saveDraftBtn.style.display = (b.status === STATUS.DRAFT) ? 'block' : 'none';
+    markSoldBtn.style.display = (b.status === STATUS.AVAILABLE || b.status === STATUS.PENDING) ? 'block' : 'none';
+    deleteCardBtn.style.display = 'block';
 
     editVeil.classList.remove('hidden');
   }
@@ -1345,6 +1399,47 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
     });
   });
 
+  markSoldBtn.addEventListener('click', function(){
+    markSoldBtn.disabled = true;
+    markSoldBtn.textContent = 'Marking sold…';
+    markSold(currentEditId).then(function(b){
+      editVeil.classList.add('hidden');
+      renderGrid();
+      if(b) showToast('"' + b.title + '" marked as sold.');
+    }).catch(function(err){
+      console.error(err);
+      showToast('Could not update — check your connection and try again.');
+    }).finally(function(){
+      markSoldBtn.disabled = false;
+      markSoldBtn.textContent = 'Mark as sold';
+    });
+  });
+
+  deleteCardBtn.addEventListener('click', function(){
+    deleteConfirmVeil.classList.remove('hidden');
+  });
+  closeDeleteConfirmBtn.addEventListener('click', function(){ deleteConfirmVeil.classList.add('hidden'); });
+  cancelDeleteBtn.addEventListener('click', function(){ deleteConfirmVeil.classList.add('hidden'); });
+  deleteConfirmVeil.addEventListener('click', function(e){ if(e.target === deleteConfirmVeil) deleteConfirmVeil.classList.add('hidden'); });
+
+  confirmDeleteBtn.addEventListener('click', function(){
+    confirmDeleteBtn.disabled = true;
+    confirmDeleteBtn.textContent = 'Deleting…';
+    var titleForToast = (bikes.filter(function(x){ return x.id === currentEditId; })[0] || {}).title || 'Listing';
+    deleteListing(currentEditId).then(function(success){
+      deleteConfirmVeil.classList.add('hidden');
+      editVeil.classList.add('hidden');
+      renderGrid();
+      if(success) showToast('"' + titleForToast + '" deleted.');
+    }).catch(function(err){
+      console.error(err);
+      showToast('Could not delete — check your connection and try again.');
+    }).finally(function(){
+      confirmDeleteBtn.disabled = false;
+      confirmDeleteBtn.textContent = 'Yes, delete it';
+    });
+  });
+
   /* ---------------- DETAIL MODAL (buyer view) ---------------- */
   var detailVeil = document.getElementById('detailVeil');
   var detailInner = document.getElementById('detailModalInner');
@@ -1397,6 +1492,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
       findVeil.classList.add('hidden');
       editVeil.classList.add('hidden');
       detailVeil.classList.add('hidden');
+      deleteConfirmVeil.classList.add('hidden');
     }
   });
 
