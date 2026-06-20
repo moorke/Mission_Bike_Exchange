@@ -1,4 +1,34 @@
 <!DOCTYPE html>
+<!--
+  MISSION BIKE EXCHANGE
+  Oregon Portland Mission — card-based bike marketplace for missionaries
+
+  VERSION: 1.1.0
+  LAST UPDATED: 2026-06-20
+
+  DESCRIPTION:
+  Missionaries create a draft listing card (model name only), receive a
+  private edit code/link, then return to add photo, price, description,
+  helmet/lock availability, and phone number before posting it live to
+  the board. Buyers browse posted bikes and tap to call/text the seller.
+
+  BACKEND: Google Sheets via Apps Script web app (see AppsScript-Code.gs).
+  Reads happen over GET; saves with a photo go over POST, since base64
+  photo data is too large to fit in a URL's query string.
+
+  CHANGE LOG:
+  - 1.1.0 (2026-06-20): Fixed board thumbnails not showing posted photos
+    (photoUrl/photo field name mismatch in refreshFromSheet + findByCode).
+    Added live phone number formatting, (xxx) xxx-xxxx, to avoid Google
+    Sheets silently storing digit-only phone numbers as numbers.
+  - 1.0.1 (2026-06-19): Switched photo-saving request from GET to POST to
+    fix "Could not post" errors caused by URL length limits on photo data.
+  - 1.0.0 (2026-06-19): Initial Google Sheets-backed version — draft/edit
+    code/post flow, photo upload, board with search and type filters.
+
+  SETUP: see the "Setup notes" details block near the bottom of this file,
+  and APPS_SCRIPT_URL / DEMO_MODE in the script tag below.
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -683,7 +713,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
         </div>
         <div class="field">
           <label for="e-phone">Phone number</label>
-          <input type="tel" id="e-phone" placeholder="(503) 555-0123" required>
+          <input type="tel" id="e-phone" placeholder="(503) 555-0123" maxlength="14" required>
         </div>
       </div>
 
@@ -701,6 +731,9 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 <div class="toast" id="toast"></div>
 
 <div class="wrap" style="padding-top:8px;">
+  <p style="font-family:'Space Mono', monospace; font-size:11px; color:var(--ink-soft); margin:0 0 6px;">
+    Mission Bike Exchange — v1.1.0 (2026-06-20)
+  </p>
   <details style="font-family:'Space Mono', monospace; font-size:11.5px; color:var(--ink-soft);">
     <summary style="cursor:pointer;">Setup notes (for whoever maintains this site)</summary>
     <p style="line-height:1.6; max-width:640px;">
@@ -868,7 +901,11 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
       // Merge: keep any locally-known drafts (sheet only returns public ones),
       // replace public listings with the latest from the sheet.
       var localDrafts = bikes.filter(function(b){ return b.status === STATUS.DRAFT; });
-      bikes = localDrafts.concat(res.bikes || []);
+      var publicFromSheet = (res.bikes || []).map(function(b){
+        b.photo = b.photoUrl || null; // normalize field name for UI, same as createDraft/saveBikeFields
+        return b;
+      });
+      bikes = localDrafts.concat(publicFromSheet);
     });
   }
 
@@ -879,6 +916,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
     }
     return apiCall('getByCode', { code: code }).then(function(res){
       if(res.error || !res.bike) return null;
+      res.bike.photo = res.bike.photoUrl || null; // normalize field name for UI
       // Keep a local copy so the edit modal can read/write it synchronously.
       var existingIdx = bikes.findIndex(function(b){ return b.code === code; });
       if(existingIdx > -1) bikes[existingIdx] = res.bike; else bikes.unshift(res.bike);
@@ -966,7 +1004,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
     var term = searchTerm.trim().toLowerCase();
     var searchOk = !term ||
       b.title.toLowerCase().indexOf(term) > -1 ||
-      (b.size||'').toLowerCase().indexOf(term) > -1 ||
+      String(b.size||'').toLowerCase().indexOf(term) > -1 ||
       b.type.toLowerCase().indexOf(term) > -1;
     return typeOk && searchOk;
   }
@@ -1151,6 +1189,23 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
   var photoPreview = document.getElementById('photoPreview');
   var postSubmitBtn = document.getElementById('postSubmitBtn');
   var saveDraftBtn = document.getElementById('saveDraftBtn');
+  var phoneInput = document.getElementById('e-phone');
+
+  function formatPhone(value){
+    var digits = value.replace(/\D/g, '').slice(0, 10);
+    if(digits.length === 0) return '';
+    if(digits.length < 4) return '(' + digits;
+    if(digits.length < 7) return '(' + digits.slice(0,3) + ') ' + digits.slice(3);
+    return '(' + digits.slice(0,3) + ') ' + digits.slice(3,6) + '-' + digits.slice(6);
+  }
+
+  phoneInput.addEventListener('input', function(){
+    var cursorWasAtEnd = phoneInput.selectionStart === phoneInput.value.length;
+    phoneInput.value = formatPhone(phoneInput.value);
+    if(cursorWasAtEnd){
+      phoneInput.selectionStart = phoneInput.selectionEnd = phoneInput.value.length;
+    }
+  });
 
   closeEditBtn.addEventListener('click', function(){ editVeil.classList.add('hidden'); renderGrid(); });
   editVeil.addEventListener('click', function(e){ if(e.target === editVeil){ editVeil.classList.add('hidden'); renderGrid(); } });
@@ -1206,7 +1261,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
     document.getElementById('e-size').value = b.size || '';
     document.getElementById('e-desc').value = b.desc || '';
     document.getElementById('e-price').value = b.price != null ? b.price : '';
-    document.getElementById('e-phone').value = b.phone || '';
+    document.getElementById('e-phone').value = formatPhone(String(b.phone || ''));
 
     setToggle('toggle-stepthrough', b.stepThrough);
     setToggle('toggle-standard', !b.stepThrough);
@@ -1295,7 +1350,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
   var detailInner = document.getElementById('detailModalInner');
 
   function telHref(phone){
-    return 'tel:' + (phone||'').replace(/[^0-9+]/g, '');
+    return 'tel:' + String(phone || '').replace(/[^0-9+]/g, '');
   }
 
   function openDetail(id){
