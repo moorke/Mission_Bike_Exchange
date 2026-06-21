@@ -3,8 +3,8 @@
   MISSION BIKE EXCHANGE
   Oregon Portland Mission — card-based bike marketplace for missionaries
 
-  VERSION: 1.2
-  LAST UPDATED: 2026-06-20
+  VERSION: 1.3
+  LAST UPDATED: 2026-06-21 19:30 UTC
 
   DESCRIPTION:
   Missionaries create a draft listing card (model name only), receive a
@@ -15,10 +15,18 @@
   Buyers can click a bike's photo in the detail view to see it enlarged.
 
   BACKEND: Google Sheets via Apps Script web app (see AppsScript-Code.gs,
-  v1.2 or later). Reads happen over GET; saves with a photo go over POST,
+  v1.9 or later). Reads happen over GET; saves with a photo go over POST,
   since base64 photo data is too large to fit in a URL's query string.
 
   RELEASE NOTES:
+  - 1.3 (2026-06-21 19:30 UTC): Fixed accidental data loss in the edit
+    form — clicking the dark backdrop area (even slightly outside the
+    modal box, easy to do while filling in a long form) used to silently
+    close the form and discard everything typed so far. The edit form no
+    longer closes on a backdrop click; closing now requires the explicit
+    X button. Other modals (sell bike, find by code, delete confirmation,
+    etc.) keep click-outside-to-close, since they're low-risk single-field
+    or no-data screens where losing progress isn't a real concern.
   - 1.2 (2026-06-20): Reworded the "Have an edit code?" button and its
     modal heading to "Enter Bike Code to Edit", to make clear this is for
     sellers managing their own listing, not a general lookup for buyers.
@@ -813,7 +821,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 
 <div class="wrap" style="padding-top:8px;">
   <p style="font-family:'Space Mono', monospace; font-size:11px; color:var(--ink-soft); margin:0 0 6px;">
-    Mission Bike Exchange — v1.2 (2026-06-20)
+    Mission Bike Exchange — v1.3 (2026-06-21 19:30 UTC)
   </p>
   <details style="font-family:'Space Mono', monospace; font-size:11.5px; color:var(--ink-soft);">
     <summary style="cursor:pointer;">Setup notes (for whoever maintains this site)</summary>
@@ -1325,7 +1333,11 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
   });
 
   closeEditBtn.addEventListener('click', function(){ editVeil.classList.add('hidden'); renderGrid(); });
-  editVeil.addEventListener('click', function(e){ if(e.target === editVeil){ editVeil.classList.add('hidden'); renderGrid(); } });
+  // Intentionally no click-outside-to-close on editVeil — this form can be
+  // long (photo, type, size, frame style, brakes, helmet, lock, description,
+  // price, phone), and an accidental click just outside the modal while
+  // scrolling or interacting with a field was silently discarding
+  // everything typed so far. Closing now requires the explicit X button.
 
   photoUploadBtn.addEventListener('click', function(){ photoInput.click(); });
   photoInput.addEventListener('change', function(){
