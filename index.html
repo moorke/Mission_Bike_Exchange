@@ -3,30 +3,30 @@
   MISSION BIKE EXCHANGE
   Oregon Portland Mission — card-based bike marketplace for missionaries
 
-  VERSION: 1.3
-  LAST UPDATED: 2026-06-21 19:30 UTC
+  VERSION: 1.4
+  LAST UPDATED: 2026-06-22 19:34 UTC
 
   DESCRIPTION:
-  Missionaries create a draft listing card (model name only), receive a
-  private edit code/link, then return to add photo, price, description,
-  helmet/lock availability, and phone number before posting it live to
-  the board. Buyers browse posted bikes and tap to call/text the seller.
-  Sellers can mark a listing sold or delete it using the same edit code.
+  Missionaries create a card (model name only), which immediately appears
+  on the board with a 3-digit Bike Code shown at the bottom. They click
+  Edit on their card, type bike + their 3-digit code (e.g. bike271), and
+  the edit form opens to add photo, price, description, helmet/lock, and
+  phone before posting. Buyers browse posted bikes and tap to call/text
+  the seller. Sellers can mark a listing sold or delete it via Edit button.
   Buyers can click a bike's photo in the detail view to see it enlarged.
 
   BACKEND: Google Sheets via Apps Script web app (see AppsScript-Code.gs,
-  v1.9 or later). Reads happen over GET; saves with a photo go over POST,
-  since base64 photo data is too large to fit in a URL's query string.
+  v2.0 or later). Reads happen over GET; saves with a photo go over POST.
 
   RELEASE NOTES:
-  - 1.3 (2026-06-21 19:30 UTC): Fixed accidental data loss in the edit
-    form — clicking the dark backdrop area (even slightly outside the
-    modal box, easy to do while filling in a long form) used to silently
-    close the form and discard everything typed so far. The edit form no
-    longer closes on a backdrop click; closing now requires the explicit
-    X button. Other modals (sell bike, find by code, delete confirmation,
-    etc.) keep click-outside-to-close, since they're low-risk single-field
-    or no-data screens where losing progress isn't a real concern.
+  - 1.4 (2026-06-22 19:34 UTC): Major flow simplification per Revisions_01:
+    removed the code-reveal popup and the Enter Bike Code to Edit header
+    button. Cards now appear immediately on the board. Each card has an
+    Edit button; clicking it shows a prompt to enter bike + 3-digit code
+    (e.g. bike271). Code is shown on the card as "Bike Code XXX". All cards
+    including drafts now show on the board. Code format changed from
+    BIKE-XXXX (4 digits) to bikeXXX (3 digits); old codes still work.
+  - 1.3 (2026-06-21 19:30 UTC): Fixed accidental data loss in the edit form.
   - 1.2 (2026-06-20): Reworded the "Have an edit code?" button and its
     modal heading to "Enter Bike Code to Edit", to make clear this is for
     sellers managing their own listing, not a general lookup for buyers.
@@ -292,6 +292,30 @@
     padding:3px 9px;
     border-radius:12px;
   }
+  .card-code{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--ink-soft);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    margin-top:4px;
+    padding-top:6px;
+    border-top:1px dashed var(--line);
+  }
+  .card-edit-btn{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.03em;
+    background:var(--paper-deep);
+    color:var(--ink);
+    border:1.5px solid var(--ink);
+    border-radius:3px;
+    padding:4px 10px;
+    cursor:pointer;
+    flex-shrink:0;
+  }
+  .card-edit-btn:hover{background:var(--ink);color:var(--paper);}
   .status-pill.available{background:#E4E9DD;color:var(--sage-dark);}
   .status-pill.pending{background:#F3E3D3;color:var(--rust-dark);}
   .status-pill.sold{background:#E6E3DA;color:var(--ink-soft);}
@@ -572,30 +596,6 @@
   .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
 
   /* edit-code callout */
-  .code-callout{
-    background:var(--paper-deep);
-    border:1.5px dashed var(--ink);
-    border-radius:4px;
-    padding:16px;
-    text-align:center;
-    margin-bottom:16px;
-  }
-  .code-callout .code{
-    font-family:'Space Mono', monospace;
-    font-weight:700;
-    font-size:22px;
-    letter-spacing:0.06em;
-    color:var(--rust-dark);
-    margin:6px 0;
-  }
-  .code-callout p{margin:0;font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
-  .copy-row{display:flex;gap:8px;margin-top:10px;}
-  .copy-row button{flex:1;}
-
-  .find-row{display:flex;gap:8px;}
-  .find-row input{flex:1;}
-  .find-row button{flex-shrink:0;}
-
   .conn-banner{
     font-family:'Space Mono', monospace;
     font-size:11.5px;
@@ -632,10 +632,6 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
       </div>
     </div>
     <div class="header-actions">
-      <button class="secondary-btn" id="findCardBtn">
-        <i class="ti ti-key" aria-hidden="true"></i>
-        <span class="label">Enter Bike Code to Edit</span>
-      </button>
       <button class="post-btn" id="sellBikeBtn">
         <i class="ti ti-plus" aria-hidden="true"></i>
         <span class="label">Sell bike</span>
@@ -667,52 +663,30 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
       <div class="field">
         <label for="s-title">Bike model</label>
         <input type="text" id="s-title" placeholder="e.g. Trek FX 2" required autocomplete="off">
-        <p class="field-hint">This creates your card. You'll add the photo, price, and details next — nothing is visible to buyers until you finish and tap Post.</p>
+        <p class="field-hint">Your card appears on the board immediately. Click <strong>Edit</strong> on the card to add photo, price, and details, then Post it.</p>
       </div>
       <button type="submit" class="submit-btn">Create card</button>
     </form>
   </div>
 </div>
 
-<!-- STEP 2: Edit code reveal -->
-<div class="modal-veil hidden" id="codeVeil">
-  <div class="modal">
+<!-- CARD EDIT PROMPT (appears when Edit button on a card is clicked) -->
+<div class="modal-veil hidden" id="cardEditVeil">
+  <div class="modal" style="max-width:340px;">
     <div class="modal-head">
-      <h2>Card created</h2>
-      <button class="x-btn" id="closeCodeBtn" aria-label="Close"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="code-callout">
-      <p>Your private edit code — save this to finish your listing later</p>
-      <div class="code" id="revealCode">BIKE-0000</div>
-      <p id="revealLink" style="word-break:break-all;"></p>
-      <div class="copy-row">
-        <button type="button" class="secondary-btn" id="copyCodeBtn"><i class="ti ti-copy" aria-hidden="true"></i> Copy code</button>
-        <button type="button" class="secondary-btn" id="copyLinkBtn"><i class="ti ti-link" aria-hidden="true"></i> Copy link</button>
-      </div>
-    </div>
-    <button type="button" class="submit-btn" id="continueEditingBtn">Add photo &amp; details now</button>
-    <button type="button" class="submit-btn ghost" id="finishLaterBtn" style="margin-top:8px;">I'll finish later</button>
-  </div>
-</div>
-
-<!-- FIND CARD BY CODE -->
-<div class="modal-veil hidden" id="findVeil">
-  <div class="modal">
-    <div class="modal-head">
-      <h2>Enter Bike Code to Edit</h2>
-      <button class="x-btn" id="closeFindBtn" aria-label="Close"><i class="ti ti-x"></i></button>
+      <h2>Edit listing</h2>
+      <button class="x-btn" id="closeCardEditBtn" aria-label="Close"><i class="ti ti-x"></i></button>
     </div>
     <div class="field">
-      <label for="find-code">Edit code</label>
-      <div class="find-row">
-        <input type="text" id="find-code" placeholder="BIKE-0000" autocomplete="off">
-        <button type="button" class="post-btn" id="findGoBtn">Go</button>
-      </div>
+      <label for="card-edit-code">Enter bike code</label>
+      <input type="text" id="card-edit-code" placeholder="bike271" autocomplete="off">
+      <p class="field-hint">Type <strong>bike</strong> followed by the 3-digit code shown at the bottom of the card (e.g. bike271)</p>
     </div>
+    <button type="button" class="submit-btn" id="cardEditGoBtn">Edit</button>
   </div>
 </div>
 
-<!-- STEP 3: Edit card (photo, description, price, helmet/lock) -->
+<!-- EDIT CARD (photo, description, price, helmet/lock) -->
 <div class="modal-veil hidden" id="editVeil">
   <div class="modal">
     <div class="modal-head">
@@ -821,7 +795,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 
 <div class="wrap" style="padding-top:8px;">
   <p style="font-family:'Space Mono', monospace; font-size:11px; color:var(--ink-soft); margin:0 0 6px;">
-    Mission Bike Exchange — v1.3 (2026-06-21 19:30 UTC)
+    Mission Bike Exchange — v1.4 (2026-06-22 19:34 UTC)
   </p>
   <details style="font-family:'Space Mono', monospace; font-size:11.5px; color:var(--ink-soft);">
     <summary style="cursor:pointer;">Setup notes (for whoever maintains this site)</summary>
@@ -856,8 +830,8 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
   var STATUS = { DRAFT:'draft', AVAILABLE:'available', PENDING:'pending', SOLD:'sold' };
 
   function genCode(){
-    var n = Math.floor(1000 + Math.random() * 9000);
-    return 'BIKE-' + n;
+    var n = Math.floor(100 + Math.random() * 900); // 100–999, always 3 digits
+    return 'bike' + n;
   }
   function genId(){
     return 'bk_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
@@ -979,22 +953,23 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
   }
 
   function publicBikes(){
-    // Buyers only ever see posted (non-draft) listings.
-    return bikes.filter(function(b){ return b.status !== STATUS.DRAFT; });
+    // All bikes show on the board now — drafts appear with an Edit button
+    // so the seller can complete their listing. Previously drafts were hidden
+    // until posted, but the new flow requires the card to be visible
+    // immediately so the seller can see their code and click Edit.
+    return bikes;
   }
 
   function refreshFromSheet(){
     if(isDemo()) return Promise.resolve();
     return apiCall('list', {}).then(function(res){
       if(res.error){ console.error(res.error); return; }
-      // Merge: keep any locally-known drafts (sheet only returns public ones),
-      // replace public listings with the latest from the sheet.
-      var localDrafts = bikes.filter(function(b){ return b.status === STATUS.DRAFT; });
-      var publicFromSheet = (res.bikes || []).map(function(b){
-        b.photo = b.photoUrl || null; // normalize field name for UI, same as createDraft/saveBikeFields
+      // list now returns all bikes including drafts, so just replace the
+      // local array directly — no need to merge local drafts separately.
+      bikes = (res.bikes || []).map(function(b){
+        b.photo = b.photoUrl || null; // normalize field name for UI
         return b;
       });
-      bikes = localDrafts.concat(publicFromSheet);
     });
   }
 
@@ -1164,13 +1139,27 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 
       var priceHtml = (b.price != null) ? '<div class="price-tag">$' + Number(b.price).toLocaleString() + '</div>' : '';
 
+      // Display code as "Bike Code 271" — extract just the digits/number part
+      // handles both new format (bike271) and old format (BIKE-1234) gracefully
+      var codeDisplay = b.code ? b.code.replace(/^bike-?/i, '') : '';
+
       card.innerHTML =
         priceHtml +
         '<div class="photo">' + photoBlock(b) + '</div>' +
         '<h3 class="card-title">' + escapeHtml(b.title) + '</h3>' +
         '<div class="card-meta"><span>' + escapeHtml(b.type) + '</span><span>·</span><span>' + escapeHtml(b.size||'—') + '</span></div>' +
         '<div class="badge-row">' + badges + '</div>' +
-        '<div class="status-row"><span class="status-pill ' + b.status + '">' + statusLabel(b.status) + '</span></div>';
+        '<div class="status-row">' +
+          '<span class="status-pill ' + b.status + '">' + statusLabel(b.status) + '</span>' +
+          '<button class="card-edit-btn" data-id="' + escapeHtml(b.id) + '" aria-label="Edit this listing">Edit</button>' +
+        '</div>' +
+        '<div class="card-code">Bike Code ' + escapeHtml(codeDisplay) + '</div>';
+
+      // Edit button — stops propagation so it doesn't open the detail view
+      card.querySelector('.card-edit-btn').addEventListener('click', function(e){
+        e.stopPropagation();
+        openCardEditPrompt(b.id);
+      });
 
       card.addEventListener('click', function(){ openDetail(b.id); });
       card.addEventListener('keydown', function(e){
@@ -1199,106 +1188,59 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
   closeSellBtn.addEventListener('click', function(){ sellVeil.classList.add('hidden'); });
   sellVeil.addEventListener('click', function(e){ if(e.target === sellVeil) sellVeil.classList.add('hidden'); });
 
+
   sellForm.addEventListener('submit', function(e){
     e.preventDefault();
     var title = document.getElementById('s-title').value.trim();
     if(!title) return;
     sellVeil.classList.add('hidden');
     createDraft(title).then(function(bike){
-      showCodeReveal(bike);
+      renderGrid();
+      showToast('Card created — click Edit on your card to add details.');
     }).catch(function(err){
       console.error(err);
       showToast('Could not create card — check your connection and try again.');
     });
   });
 
-  /* ---------------- STEP 2: CODE REVEAL ---------------- */
-  var codeVeil = document.getElementById('codeVeil');
-  var closeCodeBtn = document.getElementById('closeCodeBtn');
-  var revealCode = document.getElementById('revealCode');
-  var revealLink = document.getElementById('revealLink');
-  var copyCodeBtn = document.getElementById('copyCodeBtn');
-  var copyLinkBtn = document.getElementById('copyLinkBtn');
-  var continueEditingBtn = document.getElementById('continueEditingBtn');
-  var finishLaterBtn = document.getElementById('finishLaterBtn');
+  /* ---------------- CARD EDIT PROMPT ---------------- */
+  var cardEditVeil = document.getElementById('cardEditVeil');
+  var closeCardEditBtn = document.getElementById('closeCardEditBtn');
+  var cardEditCodeInput = document.getElementById('card-edit-code');
+  var cardEditGoBtn = document.getElementById('cardEditGoBtn');
+  var pendingEditBikeId = null; // id of the card whose Edit button was clicked
 
-  function editLinkFor(code){
-    var base = window.location.href.split('#')[0].split('?')[0];
-    return base + '?edit=' + encodeURIComponent(code);
+  function openCardEditPrompt(bikeId){
+    pendingEditBikeId = bikeId;
+    cardEditCodeInput.value = '';
+    cardEditVeil.classList.remove('hidden');
+    setTimeout(function(){ cardEditCodeInput.focus(); }, 50);
   }
 
-  function showCodeReveal(bike){
-    revealCode.textContent = bike.code;
-    var link = editLinkFor(bike.code);
-    revealLink.innerHTML = '<a href="' + link + '" style="color:var(--rust-dark);">' + link + '</a>';
-    codeVeil.classList.remove('hidden');
-    codeVeil.dataset.bikeId = bike.id;
-  }
-  closeCodeBtn.addEventListener('click', function(){ codeVeil.classList.add('hidden'); renderGrid(); });
-  codeVeil.addEventListener('click', function(e){ if(e.target === codeVeil){ codeVeil.classList.add('hidden'); renderGrid(); } });
-
-  function copyText(text){
-    if(navigator.clipboard && navigator.clipboard.writeText){
-      navigator.clipboard.writeText(text).then(function(){ showToast('Copied'); }).catch(function(){ showToast('Could not copy — select and copy manually'); });
-    } else {
-      showToast('Could not copy — select and copy manually');
+  function tryCardEdit(){
+    var entered = cardEditCodeInput.value.trim().toLowerCase();
+    var b = bikes.filter(function(x){ return x.id === pendingEditBikeId; })[0];
+    if(!b){ showToast('Could not find that card.'); return; }
+    // Normalize both sides to just the digit part for comparison:
+    // stored "bike271" or "BIKE-1234" → "271" or "1234"
+    // entered "bike271" → "271"
+    var storedDigits = b.code.replace(/^bike-?/i, '').toLowerCase();
+    var enteredDigits = entered.replace(/^bike-?/i, '');
+    if(enteredDigits !== storedDigits){
+      showToast('Incorrect code — check the Bike Code shown at the bottom of the card.');
+      return;
     }
+    cardEditVeil.classList.add('hidden');
+    cardEditCodeInput.value = '';
+    openEditModal(b.id);
   }
-  copyCodeBtn.addEventListener('click', function(){ copyText(revealCode.textContent); });
-  copyLinkBtn.addEventListener('click', function(){ copyText(editLinkFor(revealCode.textContent)); });
 
-  continueEditingBtn.addEventListener('click', function(){
-    var id = codeVeil.dataset.bikeId;
-    codeVeil.classList.add('hidden');
-    openEditModal(id);
-  });
-  finishLaterBtn.addEventListener('click', function(){
-    codeVeil.classList.add('hidden');
-    renderGrid();
-    showToast('Draft saved — use your edit code anytime to finish posting.');
-  });
+  closeCardEditBtn.addEventListener('click', function(){ cardEditVeil.classList.add('hidden'); });
+  cardEditVeil.addEventListener('click', function(e){ if(e.target === cardEditVeil) cardEditVeil.classList.add('hidden'); });
+  cardEditGoBtn.addEventListener('click', tryCardEdit);
+  cardEditCodeInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); tryCardEdit(); } });
 
-  /* ---------------- FIND CARD BY CODE ---------------- */
-  var findVeil = document.getElementById('findVeil');
-  var findCardBtn = document.getElementById('findCardBtn');
-  var closeFindBtn = document.getElementById('closeFindBtn');
-  var findCodeInput = document.getElementById('find-code');
-  var findGoBtn = document.getElementById('findGoBtn');
-
-  findCardBtn.addEventListener('click', function(){
-    findCodeInput.value = '';
-    findVeil.classList.remove('hidden');
-    setTimeout(function(){ findCodeInput.focus(); }, 50);
-  });
-  closeFindBtn.addEventListener('click', function(){ findVeil.classList.add('hidden'); });
-  findVeil.addEventListener('click', function(e){ if(e.target === findVeil) findVeil.classList.add('hidden'); });
-
-  function tryOpenByCode(code){
-    findByCode(code).then(function(b){
-      if(!b){
-        showToast('No card found with that code.');
-        return;
-      }
-      findVeil.classList.add('hidden');
-      openEditModal(b.id);
-    }).catch(function(err){
-      console.error(err);
-      showToast('Could not look up that code — check your connection and try again.');
-    });
-  }
-  findGoBtn.addEventListener('click', function(){ tryOpenByCode(findCodeInput.value); });
-  findCodeInput.addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); tryOpenByCode(findCodeInput.value); } });
-
-  // Support arriving via a direct edit link: ?edit=BIKE-1234
-  (function checkUrlForEditCode(){
-    var params = new URLSearchParams(window.location.search);
-    var code = params.get('edit');
-    if(code){
-      setTimeout(function(){ tryOpenByCode(code); }, 100);
-    }
-  })();
-
-  /* ---------------- STEP 3: EDIT / FINISH LISTING ---------------- */
+  /* ---------------- EDIT / FINISH LISTING ---------------- */
   var editVeil = document.getElementById('editVeil');
   var editForm = document.getElementById('editForm');
   var closeEditBtn = document.getElementById('closeEditBtn');
@@ -1589,8 +1531,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
   document.addEventListener('keydown', function(e){
     if(e.key === 'Escape'){
       sellVeil.classList.add('hidden');
-      codeVeil.classList.add('hidden');
-      findVeil.classList.add('hidden');
+      cardEditVeil.classList.add('hidden');
       editVeil.classList.add('hidden');
       detailVeil.classList.add('hidden');
       deleteConfirmVeil.classList.add('hidden');
