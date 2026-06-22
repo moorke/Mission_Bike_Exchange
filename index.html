@@ -3,8 +3,8 @@
   MISSION BIKE EXCHANGE
   Oregon Portland Mission — card-based bike marketplace for missionaries
 
-  VERSION: 1.4.2
-  LAST UPDATED: 2026-06-22 23:16 UTC
+  VERSION: 1.4.5
+  LAST UPDATED: 2026-06-22 23:50 UTC
 
   DESCRIPTION:
   Missionaries create a card (model name only), which immediately appears
@@ -612,7 +612,7 @@
   @media (max-width:480px){
     .field-row{grid-template-columns:1fr;}
     .brand h1{font-size:21px;}
-    .post-btn span.label{display:none;}
+    .post-btn{font-size:11px;padding:11px 14px;}
   }
 </style>
 </head>
@@ -678,9 +678,8 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
       <button class="x-btn" id="closeCardEditBtn" aria-label="Close"><i class="ti ti-x"></i></button>
     </div>
     <div class="field">
-      <label for="card-edit-code">Enter bike code</label>
+      <label for="card-edit-code">Enter Bike Code</label>
       <input type="text" id="card-edit-code" placeholder="" autocomplete="off">
-      <p class="field-hint">Type <strong>bike</strong> followed by the 3-digit code shown at the bottom of the card (e.g. bike271)</p>
     </div>
     <button type="button" class="submit-btn" id="cardEditGoBtn">Edit</button>
   </div>
@@ -798,7 +797,7 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
 
 <div class="wrap" style="padding-top:8px;">
   <p style="font-family:'Space Mono', monospace; font-size:11px; color:var(--ink-soft); margin:0 0 6px;">
-    Mission Bike Exchange — v1.4.2 (2026-06-22 23:16 UTC)
+    Mission Bike Exchange — v1.4.5 (2026-06-22 23:50 UTC)
   </p>
   <details style="font-family:'Space Mono', monospace; font-size:11.5px; color:var(--ink-soft);">
     <summary style="cursor:pointer;">Setup notes (for whoever maintains this site)</summary>
@@ -1496,13 +1495,19 @@ Mission Bike Exchange for the Oregon Portland Mission. Sell a bike by creating a
       '<div class="seller-box">' +
         '<div class="seller-info">' +
           '<div class="seller-avatar"><i class="ti ti-phone" aria-hidden="true" style="font-size:16px;"></i></div>' +
-          '<div><div class="seller-name">Seller phone</div><div class="seller-contact">' + escapeHtml(b.phone) + '</div></div>' +
+          '<div>' +
+            '<div class="seller-name">Call or text the seller</div>' +
+            '<div class="seller-contact" style="font-size:15px;font-weight:600;color:var(--ink);">' + escapeHtml(b.phone) + '</div>' +
+          '</div>' +
         '</div>' +
-        '<a class="contact-btn" href="' + telHref(b.phone) + '">Call / text</a>' +
+        '<button class="contact-btn" id="closeDetailFromSellerBtn">Close</button>' +
       '</div>';
 
     detailVeil.classList.remove('hidden');
     document.getElementById('closeDetailBtn').addEventListener('click', function(){
+      detailVeil.classList.add('hidden');
+    });
+    document.getElementById('closeDetailFromSellerBtn').addEventListener('click', function(){
       detailVeil.classList.add('hidden');
     });
 
